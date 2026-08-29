@@ -18,7 +18,7 @@ import { useCommandStore } from '@/lib/store';
 import { useReadout } from '@/lib/use-readout';
 import { useSlowTelemetry, type PatLink } from '@/lib/use-pat-link';
 import { elapsed } from '@/lib/format';
-import type { TelemetryFrame, TrajectoryKind, TunerMode } from '@/lib/types';
+import type { TelemetryFrame, TrajectoryKind } from '@/lib/types';
 
 const TRAJECTORIES: { id: TrajectoryKind; label: string; note: string }[] = [
   { id: 'LEO_SATELLITE', label: 'LEO pass', note: 'high rate, smooth' },
@@ -134,8 +134,7 @@ export function AcquisitionCommandBar({ link }: { link: PatLink }) {
   const { stage, linkMode } = useSlowTelemetry();
   const trajectory = useCommandStore((s) => s.trajectory);
   const setTrajectory = useCommandStore((s) => s.setTrajectory);
-  const tunerMode = useCommandStore((s) => s.tunerMode);
-  const setGains = useCommandStore((s) => s.setGains);
+  const setInjectorOpen = useCommandStore((s) => s.setInjectorOpen);
 
   const armed = link.running;
 
@@ -199,22 +198,6 @@ export function AcquisitionCommandBar({ link }: { link: PatLink }) {
         </CommandButton>
       </div>
 
-      <span className="hidden h-8 w-px bg-white/[0.08] lg:block" />
-
-      {/* ------------------------------ tuner ----------------------------- */}
-      <div className="flex items-center gap-3">
-        <span className="eyebrow hidden xl:block">Gains</span>
-        <Segmented<TunerMode>
-          layoutId="tuner-slug"
-          value={tunerMode}
-          options={[
-            { id: 'FIXED', label: 'fixed', note: 'static PID — the baseline everyone else ships' },
-            { id: 'SAC', label: 'adaptive', note: 'RL-scheduled gains against measured jitter PSD' },
-          ]}
-          onChange={(m) => setGains({ tunerMode: m })}
-        />
-      </div>
-
       {/* --------------------------- annunciators -------------------------- */}
       <div className="ml-auto flex items-center gap-4">
         <div className="flex flex-col items-end leading-none">
@@ -248,8 +231,8 @@ export function AcquisitionCommandBar({ link }: { link: PatLink }) {
           </StatusChip>
         </div>
 
-        <CommandButton tone="neutral" onClick={link.exportCsv}>
-          export log
+        <CommandButton tone="neutral" onClick={() => setInjectorOpen(true)}>
+          conditions
         </CommandButton>
       </div>
     </motion.header>

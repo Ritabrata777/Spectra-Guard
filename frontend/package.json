@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "framer-motion": "^11.3.19",
-    "next": "14.2.5",
+    "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^4.5.4"
@@ -24,5 +24,8 @@
     "postcss": "^8.4.40",
     "tailwindcss": "^3.4.7",
     "typescript": "^5.5.4"
+  },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "14.2.35"
   }
 }

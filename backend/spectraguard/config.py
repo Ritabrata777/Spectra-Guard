@@ -657,7 +657,7 @@ class Disturbance:
     #: terminal with modest isolation. This -- not turbulence -- is the dominant
     #: pointing disturbance, which is the point the class docstring of
     #: CameraConfig labours.
-    jitter_urad: float = 150.0
+    jitter_urad: float = 600.0
 
     #: Additive read/thermal noise, DN RMS, on top of the modelled sensor noise.
     awgn_sigma: float = 4.0

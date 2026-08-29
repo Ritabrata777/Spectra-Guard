@@ -239,7 +239,7 @@ class RunMeta:
     runId: str = ""
     trajectory: str = "UAV_ORBIT"
     detector: str = "CLASSICAL"
-    fovDeg: float = 8.0
+    fovDeg: float = 2.0
     width: int = 640
     height: int = 480
     targetHz: float = 60.0

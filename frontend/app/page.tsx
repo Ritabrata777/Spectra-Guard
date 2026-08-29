@@ -27,7 +27,7 @@ import { useEffect } from 'react';
 import { AcquisitionCommandBar } from '@/components/command/AcquisitionCommandBar';
 import { TerminalLog } from '@/components/command/TerminalLog';
 import { DisturbanceInjector } from '@/components/controls/DisturbanceInjector';
-import { IntelligenceReadout } from '@/components/readout/IntelligenceReadout';
+import { SimpleReadout } from '@/components/readout/SimpleReadout';
 import { OpticalTrackingArray } from '@/components/tracking/OpticalTrackingArray';
 import { useCommandStore } from '@/lib/store';
 import { usePatLink } from '@/lib/use-pat-link';
@@ -77,7 +77,7 @@ export default function ConsolePage() {
           full-height dashboards. */}
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_23.5rem]">
         <OpticalTrackingArray className="min-h-0" />
-        <IntelligenceReadout className="z-panel min-h-0" />
+        <SimpleReadout className="z-panel min-h-0" />
       </div>
 
       <TerminalLog link={link} />

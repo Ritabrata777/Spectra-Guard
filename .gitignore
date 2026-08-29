@@ -1,0 +1,12 @@
+# Python runtime and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Next.js and local package installs
+frontend/node_modules/
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
+
+# An accidental npm invocation from the Python directory may create this.
+backend/package-lock.json
