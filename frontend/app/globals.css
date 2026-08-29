@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * SPECTRA GUARD — glass material layer.
+ *
+ * Everything here exists because Tailwind utilities alone cannot express a
+ * convincing glass surface: real frosted glass needs a blurred backdrop, a
+ * gradient film, a specular top edge, and a hairline border, all stacked in a
+ * specific order. These utilities encode that recipe once so no component
+ * reinvents it and drifts.
+ */
+
+:root {
+  /* Glass films. White at low alpha, never grey. */
+  --glass-film-top: rgba(255, 255, 255, 0.09);
+  --glass-film-bottom: rgba(255, 255, 255, 0.035);
+  --glass-film-tint: rgba(148, 180, 255, 0.03);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-edge-strong: rgba(255, 255, 255, 0.26);
+
+  /* Accent glows, kept as raw channels so canvas code can reuse them. */
+  --photon-rgb: 34, 224, 255;
+  --ember-rgb: 255, 169, 43;
+  --plasma-rgb: 255, 59, 92;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-obsidian font-sans text-readout-primary antialiased;
+    /* The void is not flat black — two off-axis radial pools give the glass
+       something to refract, which is what makes the blur legible. */
+    background-image:
+      radial-gradient(120% 90% at 12% -10%, rgba(34, 224, 255, 0.10) 0%, transparent 55%),
+      radial-gradient(100% 80% at 100% 108%, rgba(255, 169, 43, 0.07) 0%, transparent 60%),
+      radial-gradient(60% 60% at 50% 50%, rgba(17, 24, 38, 0.9) 0%, #05070b 100%);
+    background-attachment: fixed;
+    overflow: hidden;
+  }
+
+  /* Tabular figures everywhere numbers live, so digits occupy fixed width and
+     readouts stop jittering as values update 60 times a second. */
+  .font-mono,
+  code,
+  kbd {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+  }
+
+  ::selection {
+    background: rgba(34, 224, 255, 0.28);
+    color: #eafbff;
+  }
+
+  /* Visible keyboard focus is non-negotiable, but the default ring is ugly
+     against glass — use a photon halo instead. */
+  :focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 1px rgba(var(--photon-rgb), 0.9),
+      0 0 18px -2px rgba(var(--photon-rgb), 0.65);
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /*
+   * .glass — the base frosted surface.
+   * Order matters: backdrop-filter blurs what is behind, the gradient film sits
+   * on top of the blur, and the inset highlight rides above the film.
+   */
+  .glass {
+    position: relative;
+    background-image: linear-gradient(
+      160deg,
+      var(--glass-film-top) 0%,
+      var(--glass-film-tint) 45%,
+      var(--glass-film-bottom) 100%
+    );
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-edge);
+    box-shadow:
+      0 24px 64px -16px rgba(0, 0, 0, 0.75),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.04);
+  }
+
+  /* Deeper blur for the sidebar and pill, which overlap busy content. */
+  .glass-deep {
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+  }
+
+  .glass-abyssal {
+    backdrop-filter: blur(64px) saturate(190%) brightness(0.92);
+    -webkit-backdrop-filter: blur(64px) saturate(190%) brightness(0.92);
+  }
+
+  /*
+   * .specular — a single travelling highlight across the top edge. This is the
+   * detail that reads as "Apple glass": a real bevel catches light unevenly, so
+   * the highlight is a gradient that fades at both ends rather than a flat 1px
+   * line running the full width.
+   */
+  .specular::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.05) 12%,
+      var(--glass-edge-strong) 48%,
+      rgba(255, 255, 255, 0.08) 78%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  /*
+   * .caustic — light bleeding *through* the glass from a source behind it.
+   * Used where an accent sits under a panel (confidence ring, lock indicator)
+   * so the colour appears to be subsurface rather than painted on.
+   */
+  .caustic::after {
+    content: '';
+    position: absolute;
+    inset: -40% -10% auto -10%;
+    height: 80%;
+    background: radial-gradient(
+      50% 100% at 50% 0%,
+      rgba(var(--photon-rgb), 0.18) 0%,
+      transparent 70%
+    );
+    filter: blur(18px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Hairline internal divider that respects the glass film. */
+  .hairline {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Eyebrow label: the structural device for every channel name. */
+  .eyebrow {
+    @apply font-mono text-eyebrow uppercase text-readout-tertiary;
+  }
+
+  /*
+   * .tactile — physical control surface for sliders and buttons. Slight
+   * gradient inversion versus .glass so controls read as *recessed into* the
+   * panel rather than floating on it.
+   */
+  .tactile {
+    background-image: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.32) 0%,
+      rgba(0, 0, 0, 0.14) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow:
+      inset 0 2px 6px 0 rgba(0, 0, 0, 0.55),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* Terminal glass is tinted darker — CRT behind smoked acrylic. */
+  .glass-terminal {
+    background-image: linear-gradient(
+      180deg,
+      rgba(5, 7, 11, 0.72) 0%,
+      rgba(10, 15, 23, 0.58) 100%
+    );
+    backdrop-filter: blur(32px) saturate(140%);
+    -webkit-backdrop-filter: blur(32px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+@layer utilities {
+  /* Text that sits on glass needs a touch of shadow or it smears into the
+     blur behind it. */
+  .text-crisp {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  }
+
+  .glow-photon-text {
+    color: #22e0ff;
+    text-shadow: 0 0 12px rgba(var(--photon-rgb), 0.7);
+  }
+  .glow-ember-text {
+    color: #ffa92b;
+    text-shadow: 0 0 12px rgba(var(--ember-rgb), 0.7);
+  }
+  .glow-plasma-text {
+    color: #ff3b5c;
+    text-shadow: 0 0 12px rgba(var(--plasma-rgb), 0.75);
+  }
+
+  /* Thin scrollbars that don't puncture the glass illusion. */
+  .scroll-frost {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+  }
+  .scroll-frost::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scroll-frost::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-frost::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+  }
+  .scroll-frost::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+  }
+}
+
+/* Respect the OS setting. A telemetry console that keeps pulsing at someone
+   with vestibular sensitivity is a broken console. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Graceful degradation: without backdrop-filter the panels would become
+   unreadable transparent rectangles, so fall back to an opaque tint. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .glass-deep,
+  .glass-abyssal,
+  .glass-terminal {
+    background-color: rgba(12, 18, 28, 0.92);
+  }
+}

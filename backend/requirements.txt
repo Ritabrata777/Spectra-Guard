@@ -1,0 +1,29 @@
+# SPECTRA GUARD — backend runtime dependencies.
+#
+# DELIBERATELY SHORT. Every entry here is something that has to install cleanly
+# on a jury laptop, get frozen into a PyInstaller executable, and still work on a
+# machine with no internet. Two exclusions are load-bearing:
+#
+#   scipy   — not used. The whole physics stack (FFT phase screens, Welch PSD,
+#             matrix algebra) is implemented on numpy alone. scipy would add
+#             ~90 MB to the frozen binary for functions we can write in twenty
+#             lines and understand completely.
+#
+#   torch   — not required. The adaptive gain tuner runs a cross-entropy-method
+#             policy search on numpy (see control/tuner.py). If torch IS present
+#             the SAC policy is used instead; if it is absent the system degrades
+#             to the CEM tuner and says so in the log rather than failing.
+#
+# The result: `pip install -r requirements.txt` pulls four packages, and the
+# tracker itself runs on numpy + opencv.
+
+numpy>=1.24
+opencv-python>=4.8
+fastapi>=0.110
+uvicorn[standard]>=0.29
+
+# --- development only -------------------------------------------------------
+# The test suite is pytest-compatible but does not require it: `python -m tests`
+# runs the same assertions with the standard library alone, so a grader can
+# verify the physics without installing anything.
+pytest>=8.0 ; extra == "dev"
