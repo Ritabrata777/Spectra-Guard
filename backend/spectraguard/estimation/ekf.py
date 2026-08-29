@@ -49,6 +49,16 @@ class BearingEKF:
         Q = np.zeros((6, 6)); Q[np.ix_((0,2,4),(0,2,4))] = q1; Q[np.ix_((1,3,5),(1,3,5))] = q1
         self.x = F @ self.x; self.P = F @ self.P @ F.T + Q
         self.P = .5 * (self.P + self.P.T)
+        # Physical bearing constraints & angle wrap
+        self.x[0] = (self.x[0] + math.pi) % (2.0 * math.pi) - math.pi
+        self.x[1] = max(-math.radians(89.0), min(math.radians(89.0), self.x[1]))
+        if self.coast_frames > 0:
+            # Damp acceleration during open-loop coast to prevent runaway polynomial integration
+            self.x[4] *= 0.96
+            self.x[5] *= 0.96
+            self.x[2] = max(-0.8, min(0.8, self.x[2]))
+            self.x[3] = max(-0.8, min(0.8, self.x[3]))
+
 
     def prior(self, pan: float, tilt: float) -> Optional[tuple[float,float,float,float,float]]:
         if not self.initialized: return None

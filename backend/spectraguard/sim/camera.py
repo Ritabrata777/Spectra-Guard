@@ -124,8 +124,8 @@ class PinholeCamera:
         needs to know the target is out of view, and the EKF's predicted
         measurement is legitimately off-frame while coasting.
         """
-        dax = _clamp(az - pan, self._max_off_axis)
-        dev = _clamp(el - tilt, self._max_off_axis)
+        dax = _clamp(_wrap_angle(az - pan), self._max_off_axis)
+        dev = _clamp(_wrap_angle(el - tilt), self._max_off_axis)
         u = self.cx + self.f_px * math.tan(dax)
         v = self.cy - self.f_px * math.tan(dev)
         return u, v
@@ -140,8 +140,8 @@ class PinholeCamera:
         Used to seed the EKF from the first detection, and by any diagnostic
         that wants to express a pixel error as an angle.
         """
-        az = pan + math.atan((u - self.cx) / self.f_px)
-        el = tilt - math.atan((v - self.cy) / self.f_px)
+        az = _wrap_angle(pan + math.atan((u - self.cx) / self.f_px))
+        el = _clamp(_wrap_angle(tilt - math.atan((v - self.cy) / self.f_px)), math.radians(89.5))
         return az, el
 
     def jacobian(self, az: float, el: float, pan: float, tilt: float) -> Tuple[float, float]:
@@ -157,11 +157,12 @@ class PinholeCamera:
         arc-minutes; modelling it would add a small fixed cross-coupling and is
         left as future work.)
         """
-        dax = _clamp(az - pan, self._max_off_axis)
-        dev = _clamp(el - tilt, self._max_off_axis)
+        dax = _clamp(_wrap_angle(az - pan), self._max_off_axis)
+        dev = _clamp(_wrap_angle(el - tilt), self._max_off_axis)
         sec2_a = 1.0 / (math.cos(dax) ** 2)
         sec2_e = 1.0 / (math.cos(dev) ** 2)
         return self.f_px * sec2_a, -self.f_px * sec2_e
+
 
     def in_frame(self, u: float, v: float, margin: float = 0.0) -> bool:
         return (-margin <= u < self.width + margin) and (-margin <= v < self.height + margin)
@@ -170,6 +171,9 @@ class PinholeCamera:
         """On-axis plate scale [px/rad]. Reporting helper."""
         return self.f_px
 
+
+def _wrap_angle(a: float) -> float:
+    return (a + math.pi) % (2.0 * math.pi) - math.pi
 
 def _clamp(x: float, lim: float) -> float:
     return lim if x > lim else (-lim if x < -lim else x)

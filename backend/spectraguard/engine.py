@@ -85,9 +85,14 @@ class PatEngine:
         if self.stage=="FAULT":
             self._fault_count-=1
             if self._fault_count<=0: self.stage="SEARCH"; self.ekf.reset()
-        ex=(snap.cx-self.cfg.camera.cx) if snap.accepted else 0.; ey=(snap.cy-self.cfg.camera.cy) if snap.accepted else 0.
-        if self.stage in ("ACQUIRE","TRACK","COAST"):
-            self._last_cmd=self.pid.step(ex,ey,dt)
+        ex = (snap.cx - self.cfg.camera.cx) if snap.accepted else 0.0
+        ey = (snap.cy - self.cfg.camera.cy) if snap.accepted else 0.0
+        max_err = float(self.cfg.camera.width * 2)
+        ex = max(-max_err, min(max_err, ex))
+        ey = max(-max_err, min(max_err, ey))
+        if self.stage in ("ACQUIRE", "TRACK", "COAST"):
+            self._last_cmd = self.pid.step(ex, ey, dt)
+
         elif self.stage=="SEARCH":
             self._last_cmd=self._search_command()
         else:
